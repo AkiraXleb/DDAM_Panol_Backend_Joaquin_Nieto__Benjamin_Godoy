@@ -1,0 +1,57 @@
+services:
+  postgres-db:
+    restart: unless-stopped
+    image: postgres:18-alpine
+    container_name: panol-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: equiposdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d equiposdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  equipos-api:
+    restart: unless-stopped
+    build: ./equipos-service
+    container_name: panol-equipos
+    environment:
+      DB_HOST: postgres-db
+      DB_PORT: 5432
+      DB_NAME: equiposdb
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+  solicitudes-api:
+    restart: unless-stopped
+    build: ./solicitudes-service
+    container_name: panol-solicitudes
+    environment:
+      DB_HOST: postgres-db
+      DB_PORT: 5432
+      DB_NAME: solicitudesdb
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      EQUIPOS_URL: http://equipos-api:8080
+    ports:
+      - "8082:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      equipos-api:
+        condition: service_started
+
+volumes:
+  postgres_data:

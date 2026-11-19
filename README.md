@@ -50,3 +50,18 @@ solicitudes-service/  entities · repository · services · client (llamada a eq
 db/init.sql           crea la segunda base de datos
 docker-compose.yml
 ```
+
+## Despliegue en AWS
+
+Corren en una instancia **AWS EC2** (AWS Academy Learner Lab, us-east-1) con Docker Compose y reinicio automático.
+
+| Servicio | URL |
+|---|---|
+| equipos-service | http://32.197.25.36:8081/api/equipos |
+| solicitudes-service | http://32.197.25.36:8082/api/solicitudes |
+
+> Solo disponible mientras el Learner Lab esté iniciado.
+
+## Aplicación Android
+
+Cliente móvil: https://github.com/AkiraXleb/DDAM_Panol_Joaquin_Nieto__Benjamin_Godoy

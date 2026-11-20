@@ -7,8 +7,9 @@ Backend de la app Android **MPAZ Pañol** (DSY1105, Evaluación Parcial 3). Tres
 | `equipos-service` | 8081 | Catálogo de equipos y stock (`/api/equipos`) |
 | `solicitudes-service` | 8082 | Solicitudes de los docentes, regla de 3 horas, aceptar/rechazar/entregar/devolver (`/api/solicitudes`). Llama a equipos para descontar/reponer stock. |
 | `usuarios-service` | 8083 | Login y administración de usuarios (`/api/usuarios`). El correo debe ser `prefijo.nombre@escuelamarcelapaz.cl` y el prefijo (`prof`, `insp`, `ti`, `admin`) define el cargo. |
+| `img-service` | 8084 | Imágenes de los equipos (`/api/imagenes/equipos/{id}`), guardadas en Postgres (máx. 3 MB, solo `image/*`). |
 
-Cada servicio tiene su propia base (`equiposdb`, `solicitudesdb`, `usuariosdb`) dentro del mismo Postgres.
+Cada servicio tiene su propia base (`equiposdb`, `solicitudesdb`, `usuariosdb`, `imgdb`) dentro del mismo Postgres.
 
 ## Cómo ejecutar
 1. Copiar `.env.example` como `.env` y poner una clave en `DB_PASSWORD`.
@@ -23,10 +24,13 @@ Pruebas unitarias (JUnit 5 + Mockito), en cada carpeta de servicio:
 ## Endpoints
 **Usuarios**
 - `POST /api/usuarios/login` body `{"email": "...", "password": "..."}` (401 si son incorrectos)
+- `PATCH /api/equipos/{id}/mantenimiento` body `{"cantidad": N}`: positivo envía N unidades a mantenimiento, negativo las devuelve al stock (409 si no alcanzan)
+- `PUT /api/imagenes/equipos/{id}` (multipart, campo `archivo`) · `GET` (404 si no tiene) · `DELETE`
 - `GET /api/usuarios` · `POST /api/usuarios` · `DELETE /api/usuarios/{id}` (no se puede eliminar a un Super Admin)
 
 **Equipos**
 - `GET /api/equipos?categoria=` · `GET /api/equipos/{id}` · `POST /api/equipos` · `PUT /api/equipos/{id}`
+- `DELETE /api/equipos/{id}` (409 si hay unidades prestadas o reservadas)
 - `PATCH /api/equipos/{id}/stock` body `{"cantidad": -2}` (negativo descuenta, positivo repone)
 
 **Solicitudes**
@@ -52,8 +56,9 @@ Aceptar descuenta stock; devolver lo repone.
 ```
 equipos-service/      entities · repository · services · controller · config (datos iniciales) · test
 solicitudes-service/  entities · repository · services · client (llamada a equipos) · controller · test
+img-service/          entities · repository · services · controller · test
 usuarios-service/     entities · repository · services · controller · config (usuarios de prueba) · test
-db/init.sql           crea las bases solicitudesdb y usuariosdb
+db/init.sql           crea las bases solicitudesdb, usuariosdb e imgdb
 docker-compose.yml
 ```
 
@@ -66,6 +71,7 @@ Corren en una instancia **AWS EC2** (AWS Academy Learner Lab, us-east-1) con Doc
 | equipos-service | http://32.197.25.36:8081/api/equipos |
 | solicitudes-service | http://32.197.25.36:8082/api/solicitudes |
 | usuarios-service | http://32.197.25.36:8083/api/usuarios |
+| img-service | http://32.197.25.36:8084/api/imagenes/equipos/{id} |
 
 > Solo disponible mientras el Learner Lab esté iniciado.
 

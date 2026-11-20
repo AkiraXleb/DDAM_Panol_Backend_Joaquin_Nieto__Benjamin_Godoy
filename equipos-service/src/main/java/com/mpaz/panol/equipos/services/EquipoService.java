@@ -17,4 +17,9 @@ public interface EquipoService {
 
     Equipo ajustarStock(Long id, int cantidad);
 
+    // cantidad positiva = envía unidades disponibles a mantenimiento, negativa = las devuelve al stock
+    Equipo ajustarMantenimiento(Long id, int cantidad);
+
+    void eliminar(Long id);
+
 }

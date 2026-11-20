@@ -2,3 +2,4 @@
 -- equiposdb la crea la imagen (POSTGRES_DB); aquí se agregan las otras bases.
 CREATE DATABASE solicitudesdb;
 CREATE DATABASE usuariosdb;
+CREATE DATABASE imgdb;

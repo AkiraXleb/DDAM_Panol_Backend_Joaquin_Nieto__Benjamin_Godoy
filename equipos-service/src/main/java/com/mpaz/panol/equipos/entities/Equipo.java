@@ -1,5 +1,6 @@
 package com.mpaz.panol.equipos.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,6 +25,9 @@ public class Equipo {
     private String ubicacion;
     private Integer stockTotal;
     private Integer stockDisponible;
+    // Unidades que están en mantenimiento (no se pueden prestar hasta que el Encargado TI las devuelva)
+    @Column(columnDefinition = "integer default 0")
+    private Integer stockMantenimiento = 0;
     // Disponible, Reservado, Prestado o Mantenimiento
     private String estado;
 

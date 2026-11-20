@@ -1,6 +1,6 @@
 # MPAZ Pañol – Backend (microservicios)
 
-Backend de la app Android **MPAZ Pañol** (DSY1105, Evaluación Parcial 3). Tres microservicios Spring Boot con una base PostgreSQL.
+Backend de la app Android **MPAZ Pañol** (DSY1105, Evaluación Parcial 3). Cuatro microservicios Spring Boot con una base PostgreSQL.
 
 | Servicio | Puerto local | Qué hace |
 |---|---|---|
@@ -24,14 +24,16 @@ Pruebas unitarias (JUnit 5 + Mockito), en cada carpeta de servicio:
 ## Endpoints
 **Usuarios**
 - `POST /api/usuarios/login` body `{"email": "...", "password": "..."}` (401 si son incorrectos)
-- `PATCH /api/equipos/{id}/mantenimiento` body `{"cantidad": N}`: positivo envía N unidades a mantenimiento, negativo las devuelve al stock (409 si no alcanzan)
-- `PUT /api/imagenes/equipos/{id}` (multipart, campo `archivo`) · `GET` (404 si no tiene) · `DELETE`
 - `GET /api/usuarios` · `POST /api/usuarios` · `DELETE /api/usuarios/{id}` (no se puede eliminar a un Super Admin)
 
 **Equipos**
 - `GET /api/equipos?categoria=` · `GET /api/equipos/{id}` · `POST /api/equipos` · `PUT /api/equipos/{id}`
-- `DELETE /api/equipos/{id}` (409 si hay unidades prestadas o reservadas)
+- `DELETE /api/equipos/{id}` (409 si hay unidades prestadas, reservadas o en mantenimiento)
 - `PATCH /api/equipos/{id}/stock` body `{"cantidad": -2}` (negativo descuenta, positivo repone)
+- `PATCH /api/equipos/{id}/mantenimiento` body `{"cantidad": N}`: positivo envía N unidades a mantenimiento, negativo las devuelve al stock (409 si no alcanzan)
+
+**Imágenes**
+- `PUT /api/imagenes/equipos/{id}` (multipart, campo `archivo`; solo `image/*`, máx. 3 MB) · `GET /api/imagenes/equipos/{id}` (404 si no tiene) · `DELETE /api/imagenes/equipos/{id}`
 
 **Solicitudes**
 - `GET /api/solicitudes?usuarioId=1&estado=Pendiente` (filtros opcionales)

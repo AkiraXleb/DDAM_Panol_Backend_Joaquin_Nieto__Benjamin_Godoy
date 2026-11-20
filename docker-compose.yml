@@ -69,5 +69,21 @@ services:
       postgres-db:
         condition: service_healthy
 
+  img-api:
+    restart: unless-stopped
+    build: ./img-service
+    container_name: panol-img
+    environment:
+      DB_HOST: postgres-db
+      DB_PORT: 5432
+      DB_NAME: imgdb
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "8084:8080"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
 volumes:
   postgres_data:

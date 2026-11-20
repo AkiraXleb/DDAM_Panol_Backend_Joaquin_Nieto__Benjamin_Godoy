@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,6 +51,18 @@ public class EquipoController {
     @PutMapping("/{id}")
     public Equipo actualizarEquipo(@PathVariable Long id, @RequestBody Equipo equipo) {
         return equipoService.actualizar(id, equipo);
+    }
+
+    // Encargado TI: cantidad positiva envía unidades a mantenimiento, negativa las devuelve
+    @PatchMapping("/{id}/mantenimiento")
+    public Equipo ajustarMantenimiento(@PathVariable Long id, @RequestBody AjusteStock ajuste) {
+        return equipoService.ajustarMantenimiento(id, ajuste.getCantidad());
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarEquipo(@PathVariable Long id) {
+        equipoService.eliminar(id);
     }
 
     @PatchMapping("/{id}/stock")

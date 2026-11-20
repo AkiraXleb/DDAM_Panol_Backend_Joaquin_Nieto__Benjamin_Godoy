@@ -73,11 +73,55 @@ public class EquipoServiceImpl implements EquipoService {
         if (nuevoStock < 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Stock insuficiente para " + equipo.getNombre());
         }
-        if (nuevoStock > equipo.getStockTotal()) {
+        if (nuevoStock > equipo.getStockTotal() - enMantenimiento(equipo)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "El stock disponible no puede superar el total");
         }
         equipo.setStockDisponible(nuevoStock);
         return equipoRepo.save(equipo);
+    }
+
+    @Override
+    public Equipo ajustarMantenimiento(Long id, int cantidad) {
+        Equipo equipo = equipoRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipo no encontrado"));
+        if (cantidad == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cantidad no puede ser 0");
+        }
+        int mantenimiento = enMantenimiento(equipo);
+        if (cantidad > 0 && cantidad > equipo.getStockDisponible()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Solo hay " + equipo.getStockDisponible() + " unidades disponibles de " + equipo.getNombre());
+        }
+        if (cantidad < 0 && -cantidad > mantenimiento) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Solo hay " + mantenimiento + " unidades en mantenimiento de " + equipo.getNombre());
+        }
+        equipo.setStockDisponible(equipo.getStockDisponible() - cantidad);
+        equipo.setStockMantenimiento(mantenimiento + cantidad);
+        // Si no queda nada disponible y hay unidades en mantenimiento, el equipo figura En Mantenimiento
+        if (equipo.getStockMantenimiento() > 0 && equipo.getStockDisponible() == 0) {
+            equipo.setEstado("En Mantenimiento");
+        } else {
+            equipo.setEstado("Disponible");
+        }
+        return equipoRepo.save(equipo);
+    }
+
+    // Los equipos creados antes de agregar esta columna tienen null: se toma como 0
+    private int enMantenimiento(Equipo equipo) {
+        return equipo.getStockMantenimiento() == null ? 0 : equipo.getStockMantenimiento();
+    }
+
+    @Override
+    public void eliminar(Long id) {
+        Equipo equipo = equipoRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipo no encontrado"));
+        // Si hay unidades prestadas o reservadas todavía no se puede quitar del inventario
+        if (equipo.getStockDisponible() < equipo.getStockTotal()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede eliminar " + equipo.getNombre() + ": tiene unidades prestadas, reservadas o en mantenimiento");
+        }
+        equipoRepo.delete(equipo);
     }
 
     private void validar(Equipo equipo) {

@@ -80,4 +80,81 @@ class EquipoServiceImplTest {
         when(repo.findById(99L)).thenReturn(Optional.empty());
         assertThrows(ResponseStatusException.class, () -> service.ajustarStock(99L, -1));
     }
+
+    @Test
+    void eliminarEquipoSinUnidadesPrestadasLoBorra() {
+        Equipo existente = equipo(5, 5);
+        when(repo.findById(1L)).thenReturn(Optional.of(existente));
+        service.eliminar(1L);
+        verify(repo).delete(existente);
+    }
+
+    @Test
+    void eliminarEquipoConUnidadesPrestadasLanzaConflicto() {
+        when(repo.findById(1L)).thenReturn(Optional.of(equipo(5, 3)));
+        assertThrows(ResponseStatusException.class, () -> service.eliminar(1L));
+        verify(repo, never()).delete(any(Equipo.class));
+    }
+
+    @Test
+    void eliminarEquipoInexistenteLanzaNotFound() {
+        when(repo.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(ResponseStatusException.class, () -> service.eliminar(99L));
+    }
+
+    @Test
+    void enviarAMantenimientoDescuentaDelDisponible() {
+        when(repo.findById(1L)).thenReturn(Optional.of(equipo(5, 5)));
+        Equipo resultado = service.ajustarMantenimiento(1L, 2);
+        assertEquals(3, resultado.getStockDisponible());
+        assertEquals(2, resultado.getStockMantenimiento());
+        assertEquals("Disponible", resultado.getEstado());
+    }
+
+    @Test
+    void siTodoQuedaEnMantenimientoElEstadoCambia() {
+        when(repo.findById(1L)).thenReturn(Optional.of(equipo(2, 2)));
+        Equipo resultado = service.ajustarMantenimiento(1L, 2);
+        assertEquals(0, resultado.getStockDisponible());
+        assertEquals("En Mantenimiento", resultado.getEstado());
+    }
+
+    @Test
+    void devolverDeMantenimientoRepoeElStock() {
+        Equipo existente = equipo(5, 3);
+        existente.setStockMantenimiento(2);
+        existente.setEstado("En Mantenimiento");
+        when(repo.findById(1L)).thenReturn(Optional.of(existente));
+        Equipo resultado = service.ajustarMantenimiento(1L, -2);
+        assertEquals(5, resultado.getStockDisponible());
+        assertEquals(0, resultado.getStockMantenimiento());
+        assertEquals("Disponible", resultado.getEstado());
+    }
+
+    @Test
+    void enviarMasDeLoDisponibleLanzaConflicto() {
+        when(repo.findById(1L)).thenReturn(Optional.of(equipo(5, 1)));
+        assertThrows(ResponseStatusException.class, () -> service.ajustarMantenimiento(1L, 2));
+        verify(repo, never()).save(any(Equipo.class));
+    }
+
+    @Test
+    void devolverMasDeLoQueHayEnMantenimientoLanzaConflicto() {
+        when(repo.findById(1L)).thenReturn(Optional.of(equipo(5, 5)));
+        assertThrows(ResponseStatusException.class, () -> service.ajustarMantenimiento(1L, -1));
+    }
+
+    @Test
+    void mantenimientoConCantidadCeroLanzaBadRequest() {
+        when(repo.findById(1L)).thenReturn(Optional.of(equipo(5, 5)));
+        assertThrows(ResponseStatusException.class, () -> service.ajustarMantenimiento(1L, 0));
+    }
+
+    @Test
+    void noSePuedeEliminarUnEquipoConUnidadesEnMantenimiento() {
+        Equipo existente = equipo(5, 3);
+        existente.setStockMantenimiento(2);
+        when(repo.findById(1L)).thenReturn(Optional.of(existente));
+        assertThrows(ResponseStatusException.class, () -> service.eliminar(1L));
+    }
 }
